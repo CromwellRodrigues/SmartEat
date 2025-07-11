@@ -6,13 +6,16 @@ import rateLimiter from "./middleware/rateLimiter.js";
 
 import food_inventoryRoute from "./routes/food_inventoryRoute.js";
 
+import job from "./config/cron.js";
 dotenv.config();
 
 const app = express();
 
+if (process.env.NODE_ENV === "production") job.start();
+
 // Middlewares
 app.use(cors({
-  origin : "http://localhost:3000",
+  origin : "http://localhost:3000", 
   credentials : true
 }))
 app.use(rateLimiter); // Apply rate limiting middleware
@@ -25,7 +28,7 @@ app.use((req, res, next) => {
 const PORT = process.env.PORT || 5001;
 
 app.get("/health", (req, res) => {
-  res.send("It's working! Yay 🎉");
+  res.status(200).json({ status: "ok" });
 });
 
 app.use("/api/food_inventory", food_inventoryRoute);
