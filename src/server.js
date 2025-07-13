@@ -15,9 +15,9 @@ if (process.env.NODE_ENV === "production") job.start();
 
 // Middlewares
 app.use(cors({
-  origin : "http://localhost:3000", 
-  credentials : true
-}))
+  origin: ["http://localhost:3000", "https://smart-eat-frontend.vercel.app"],
+  credentials: true
+}));
 app.use(rateLimiter); // Apply rate limiting middleware
 app.use(express.json()); // Middleware to parse JSON bodies
 
