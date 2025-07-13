@@ -93,10 +93,22 @@ export async function getInventorySummaryByUserId(req, res) {
             SELECT COALESCE(COUNT(*), 0) AS total_expiry_soon
             FROM food_inventory 
             WHERE user_id = ${userId} 
+            
             AND expiry_date <= CURRENT_DATE + INTERVAL '3 days'
         
           `;
 
+          const summaryAmountExpiringSoon = await sql`
+          SELECT COALESCE(SUM(CAST(amount AS NUMERIC)), 0) AS amount_expiring_soon
+          FROM food_inventory 
+          WHERE user_id = ${userId} 
+         AND expiry_date <= CURRENT_DATE + INTERVAL '3 days'
+        `;
+        console.log(
+          "summaryAmountExpiringSoon result:",
+          summaryAmountExpiringSoon
+        );
+    
     const summaryOutOfStock = await sql`
           SELECT COALESCE(COUNT(*), 0) AS total_out_of_stock
           FROM food_inventory 
@@ -115,14 +127,18 @@ export async function getInventorySummaryByUserId(req, res) {
               FROM food_inventory 
               WHERE user_id = ${userId} 
             `;
+    
+    
 
     console.log("summaryExpiry result:", summaryExpiry);
     console.log("summaryOutOfStock result:", summaryOutOfStock);
     console.log("summaryItems result:", summaryItems);
     console.log("summaryAmount result:", summaryAmount);
+    console.log("summaryAmountExpiringSoon result:", summaryAmountExpiringSoon);
 
     const responseData = {
       total_expiring_soon: summaryExpiry[0]?.total_expiry_soon,
+      amount_expiring_soon: summaryAmountExpiringSoon[0]?.amount_expiring_soon, // <-- ADD THIS
       total_out_of_stock: summaryOutOfStock[0]?.total_out_of_stock,
       total_items: summaryItems[0]?.total_items,
       total_amount: summaryAmount[0]?.total_amount,
