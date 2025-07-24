@@ -163,16 +163,16 @@ export async function updateInventoryItem(req, res) {
     }
 
     // Capitalise category
-    if (category) {
-      category =
-        category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
-    }
+     const formattedCategory = category
+       ? category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()
+       : category;
+
 
     // Update the food item in the database
     const result = await sql`
           UPDATE food_inventory 
           SET food_name = ${food_name}, 
-              category = ${category}, 
+              category = ${formattedCategory}, 
               expiry_date = ${expiry_date}, 
               quantity = ${quantity}, 
               amount = ${amount}, 
