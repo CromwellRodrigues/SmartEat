@@ -98,17 +98,14 @@ export async function getInventorySummaryByUserId(req, res) {
         
           `;
 
-          const summaryAmountExpiringSoon = await sql`
+    const summaryAmountExpiringSoon = await sql`
           SELECT COALESCE(SUM(CAST(amount AS NUMERIC)), 0) AS amount_expiring_soon
           FROM food_inventory 
           WHERE user_id = ${userId} 
          AND expiry_date <= CURRENT_DATE + INTERVAL '3 days'
         `;
-        console.log(
-          "summaryAmountExpiringSoon result:",
-          summaryAmountExpiringSoon
-        );
-    
+    console.log("summaryAmountExpiringSoon result:", summaryAmountExpiringSoon);
+
     const summaryOutOfStock = await sql`
           SELECT COALESCE(COUNT(*), 0) AS total_out_of_stock
           FROM food_inventory 
@@ -127,8 +124,6 @@ export async function getInventorySummaryByUserId(req, res) {
               FROM food_inventory 
               WHERE user_id = ${userId} 
             `;
-    
-    
 
     console.log("summaryExpiry result:", summaryExpiry);
     console.log("summaryOutOfStock result:", summaryOutOfStock);
@@ -151,5 +146,51 @@ export async function getInventorySummaryByUserId(req, res) {
     res.status(500).json({
       error: "Internal Error. Failed to fetch food inventory summary",
     });
+  }
+}
+
+export async function updateInventoryItem(req, res) {
+  try {
+    const { id } = req.params;
+    console.log("Updating item with id:", id, "typeof id:", typeof id);
+    const { food_name, category, expiry_date, quantity, amount, store } =
+      req.body;
+
+    if (isNaN(parseInt(id))) {
+      return res
+        .status(400)
+        .json({ error: "Invalid ID format. ID must be a number." });
+    }
+
+    // Capitalise category
+    if (category) {
+      category =
+        category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
+    }
+
+    // Update the food item in the database
+    const result = await sql`
+          UPDATE food_inventory 
+          SET food_name = ${food_name}, 
+              category = ${category}, 
+              expiry_date = ${expiry_date}, 
+              quantity = ${quantity}, 
+              amount = ${amount}, 
+              store = ${store}
+          WHERE id = ${parseInt(id)}
+          RETURNING *
+        `;
+console.log("SQL update result:", result);
+    if (result.length === 0) {
+      return res.status(404).json({ error: "Food item not found" });
+    }
+
+    res.status(200).json({
+      message: "Food item updated successfully!",
+      updatedItem: result[0],
+    });
+  } catch (error) {
+    console.error("Error updating food item:", error);
+    res.status(500).json({ error: "Failed to update food item" });
   }
 }
